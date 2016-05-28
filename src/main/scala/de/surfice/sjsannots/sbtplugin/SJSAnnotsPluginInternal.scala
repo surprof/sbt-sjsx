@@ -13,8 +13,10 @@ import xsbti.api.{Definition, Projection}
 object SJSAnnotsPluginInternal {
 
   def discoverAnnotations(analysis: Analysis) : Iterable[String] = {
-    Tests.allDefs(analysis).collect {
-      case JSAnnotation(annot) => annot
+    val acs = analysis.apis.external.values.flatMap(_.api.definitions()).toVector ++
+      analysis.apis.internal.values.flatMap(_.api.definitions).toVector
+    acs collect {
+      case SJSAnnotation(annot) => annot
     }
   }
 
@@ -25,13 +27,14 @@ object SJSAnnotsPluginInternal {
     IO.write(file,annots)
   }
 
-  object JSAnnotation {
+  object SJSAnnotation {
     val annotated = "SJSAnnotation"
     def unapply(t: Definition) : Option[String] = t.annotations().
       find( _.base().asInstanceOf[Projection].id == annotated ).
       map { l =>
         val s = l.arguments.apply(0).value
-        s.substring(2,s.length-2)
+        s.substring(1,s.length-1)
       }
   }
+
 }
