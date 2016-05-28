@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.1-SNAPSHOT",
+  version := "0.1.0",
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
@@ -11,6 +11,7 @@ lazy val commonSettings = Seq(
 lazy val annots = project.
   enablePlugins(ScalaJSPlugin).
   settings(commonSettings: _*).
+  settings(publishingSettings: _*).
   settings(
     name := "sjs-annots"
   )
@@ -18,7 +19,7 @@ lazy val annots = project.
 lazy val plugin = project.in(file(".")).
   aggregate(annots).
   settings(commonSettings: _*).
-  //settings(publishingSettings: _*).
+  settings(publishingSettings: _*).
   settings( 
     name := "sbt-sjs-annots",
     description := "sbt plugin for generating of JS annotation files from annotations defined on Scala classes",
@@ -48,7 +49,7 @@ lazy val publishingSettings = Seq(
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
   pomExtra := (
-    <url>https://github.com/jokade/REPO</url>
+    <url>https://github.com/jokade/sjs-annots</url>
     <licenses>
       <license>
         <name>MIT License</name>
@@ -56,8 +57,8 @@ lazy val publishingSettings = Seq(
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:jokade/REPO</url>
-      <connection>scm:git:git@github.com:jokade/REPO.git</connection>
+      <url>git@github.com:jokade/sjs-annots</url>
+      <connection>scm:git:git@github.com:jokade/sjs-annots.git</connection>
     </scm>
     <developers>
       <developer>

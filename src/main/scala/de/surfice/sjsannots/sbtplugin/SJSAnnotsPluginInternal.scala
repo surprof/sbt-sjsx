@@ -17,6 +17,7 @@ object SJSAnnotsPluginInternal {
       analysis.apis.internal.values.flatMap(_.api.definitions).toVector
     acs collect {
       case SJSAnnotation(annot) => annot
+//      case SJSRequire(annot) => annot
     }
   }
 
@@ -33,8 +34,23 @@ object SJSAnnotsPluginInternal {
       find( _.base().asInstanceOf[Projection].id == annotated ).
       map { l =>
         val s = l.arguments.apply(0).value
-        s.substring(1,s.length-1)
+        if(s.startsWith("("))
+          s.substring(2,s.length-2)
+        else
+          s.substring(1,s.length-1)
       }
   }
 
+//  object SJSRequire {
+//    val annotated = "SJSRequire"
+//    def unapply(t: Definition) : Option[String] = t.annotations().
+//      find( _.base().asInstanceOf[Projection].id == annotated ).
+//      map { l =>
+//        val s = l.arguments.apply(0).value
+//        val args = s.substring(2,s.length-2).split("\",\"")
+//        val js = s"""if("""
+//        println(s"SJSRequire: $s")
+//        ""
+//      }
+//  }
 }

@@ -23,7 +23,7 @@ object SJSAnnotsPlugin extends sbt.AutoPlugin {
   lazy val writeJSAnnots = taskKey[Unit]("Writes the JS annotations file")
 
   override def projectSettings = Seq(
-    jsAnnotsFile := (crossTarget in compile).value / s"${name.value}-annots.js",
+    jsAnnotsFile := (crossTarget in compile).value / s"${(moduleName in compile).value}-annots.js",
     jsAnnotsList := discoverAnnotations((compile in Compile).value),
     writeJSAnnots <<= (jsAnnotsFile, jsAnnotsList, streams) map writeAnnotations,
     libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjs-annots" % Version.sjsannotsVersion,
