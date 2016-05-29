@@ -14,4 +14,4 @@ import scala.annotation.StaticAnnotation
  * @param js JavScript code to be written to the annotations file
 // * @param prio priority of this annotation; in the output annotations file smaller numbers occur before higher numbers
  */
-class SJSAnnotation(js: String) extends StaticAnnotation
+class SJSAnnotation(prio: Int, js: String) extends StaticAnnotation

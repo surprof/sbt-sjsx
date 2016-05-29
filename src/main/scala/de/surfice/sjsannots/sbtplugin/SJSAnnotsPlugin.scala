@@ -18,7 +18,7 @@ object SJSAnnotsPlugin extends sbt.AutoPlugin {
 
   lazy val jsAnnotsFile = settingKey[File]("Target file for JS annotations")
 
-  lazy val jsAnnotsList = taskKey[Iterable[String]]("List with all defined JS annotations")
+  lazy val jsAnnotsList = taskKey[Seq[String]]("List with all defined JS annotations")
 
   lazy val writeJSAnnots = taskKey[Unit]("Writes the JS annotations file")
 
