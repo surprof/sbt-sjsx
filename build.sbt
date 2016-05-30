@@ -5,23 +5,47 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
-  )
+    "com.lihaoyi" %% "utest" % "0.3.1" % "test"
+  ),
+  testFrameworks += new TestFramework("utest.runner.Framework"),
+  resolvers += Resolver.sonatypeRepo("snapshots")
 )
 
-lazy val annots = project.
+lazy val root = project.in(file(".")).
+  aggregate(sjsx,plugin).
+  settings(commonSettings:_*).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val sjsx = project.
   enablePlugins(ScalaJSPlugin).
   settings(commonSettings: _*).
   settings(publishingSettings: _*).
   settings(
-    name := "sjs-annots"
+    name := "sjsx",
+    libraryDependencies ++= Seq(
+      "de.surfice" %%% "smacrotools-sjs" % "0.1-SNAPSHOT"
+    )
   )
 
-lazy val plugin = project.in(file(".")).
-  aggregate(annots).
+lazy val tests = project.
+  enablePlugins(ScalaJSPlugin).
+  dependsOn(sjsx).
+  settings(commonSettings:_*).
+  settings(
+    name := "tests",
+    publish := {},
+    publishLocal := {}
+  )
+
+
+lazy val plugin = project.
   settings(commonSettings: _*).
   settings(publishingSettings: _*).
   settings( 
-    name := "sbt-sjs-annots",
+    name := "sbt-sjsx",
     description := "sbt plugin for generating of JS annotation files from annotations defined on Scala classes",
     sbtPlugin := true,
     scalaVersion := "2.10.6",
@@ -29,8 +53,8 @@ lazy val plugin = project.in(file(".")).
     sourceGenerators in Compile += Def.task {
       val file = (sourceManaged in Compile).value / "Version.scala"
       IO.write(file,
-        s"""package de.surfice.sjsannots.sbtplugin
-        |object Version { val sjsannotsVersion = "${version.value}" }
+        s"""package sjsx.sbtplugin
+        |object Version { val sjsxVersion = "${version.value}" }
         """.stripMargin)
       Seq(file)
     }.taskValue,
