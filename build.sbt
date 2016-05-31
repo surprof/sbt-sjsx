@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.2-SNAPSHOT",
+  version := "0.2.0",
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
@@ -14,8 +14,9 @@ lazy val commonSettings = Seq(
 lazy val root = project.in(file(".")).
   aggregate(sjsx,plugin).
   settings(commonSettings:_*).
+  settings(publishingSettings: _*).
   settings(
-    name := "sjsx",
+    name := "SJSX",
     publish := {},
     publishLocal := {}
   )

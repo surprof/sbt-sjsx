@@ -10,8 +10,6 @@ import org.scalajs.sbtplugin.impl.DependencyBuilders
 import sbt.Keys._
 import sbt._
 
-import scala.RuntimeException
-
 object SJSXPlugin extends sbt.AutoPlugin {
   import SJSXPluginInternal._
   import ScalaJSPlugin.AutoImport.{fastOptJS, fullOptJS}

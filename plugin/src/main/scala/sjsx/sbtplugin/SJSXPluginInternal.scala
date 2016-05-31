@@ -8,7 +8,7 @@ package sjsx.sbtplugin
 import sbt.Keys.TaskStreams
 import sbt._
 import sbt.inc.Analysis
-import sjsx.sbtplugin.SJSXPlugin.{SJSXDependency, SJSXLoader, SJSXSnippet}
+import sjsx.sbtplugin.SJSXPlugin.{SJSXSnippet, SJSXDependency, SJSXLoader}
 import xsbti.api.{Definition, Projection}
 
 object SJSXPluginInternal {
@@ -67,7 +67,6 @@ object SJSXPluginInternal {
     streams.log.info(s"Writing JS annotations to $file")
 
     val defs = getDefinitions(analysis)
-    defs.foreach(d => println(d.name()))
 
     // TODO: currently we need to replace \' quotes; find out why/where quotation of ' occurs...
     val annots = (discoverSJSXStatic(defs).toSeq++sjsxSnippets).sortBy(_.prio).
