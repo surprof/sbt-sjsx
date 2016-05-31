@@ -5,7 +5,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "utest" % "0.3.1" % "test"
+    "com.lihaoyi" %% "utest" % "0.4.3" % "test"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework"),
   resolvers += Resolver.sonatypeRepo("snapshots")
@@ -15,6 +15,7 @@ lazy val root = project.in(file(".")).
   aggregate(sjsx,plugin).
   settings(commonSettings:_*).
   settings(
+    name := "sjsx",
     publish := {},
     publishLocal := {}
   )
@@ -73,7 +74,7 @@ lazy val publishingSettings = Seq(
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
   pomExtra := (
-    <url>https://github.com/jokade/sjs-annots</url>
+    <url>https://github.com/jokade/sjsx</url>
     <licenses>
       <license>
         <name>MIT License</name>
@@ -81,8 +82,8 @@ lazy val publishingSettings = Seq(
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:jokade/sjs-annots</url>
-      <connection>scm:git:git@github.com:jokade/sjs-annots.git</connection>
+      <url>git@github.com:jokade/sjsx</url>
+      <connection>scm:git:git@github.com:jokade/sjsx.git</connection>
     </scm>
     <developers>
       <developer>

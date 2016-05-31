@@ -27,6 +27,9 @@ object SJSXPlugin extends sbt.AutoPlugin {
   lazy val sjsxSnippets = taskKey[Seq[SJSXSnippet]]("Additional JavaScript snippets written to the sjsx file")
 
   lazy val sjsxDeps = taskKey[Seq[SJSXDependency]]("Additional module dependencies")
+
+  lazy val sjsxDebug = settingKey[Boolean]("Enable debug statements")
+
 //  lazy val sjsxAnnotsList = taskKey[Seq[Annot]]("List with all defined JS annotations")
 
   lazy val sjsxWriteFile = taskKey[Unit]("Writes the sjsx JavaScript file")
@@ -34,14 +37,14 @@ object SJSXPlugin extends sbt.AutoPlugin {
 //  lazy val sjsxRequire = taskKey[String]("Name of the JavaScript module require function to be used")
 
   override def projectSettings = Seq(
-//    sjsxRequire := "require",
+    sjsxDebug := true,
     sjsxSnippets := Seq(),
     sjsxDeps := Seq(),
     sjsxLoader := SJSXLoader.None,
     sjsxPreamble := "",
     sjsxFile := (crossTarget in compile).value / s"${(moduleName in compile).value}-sjsx.js",
 //    sjsxAnnotsList := discoverAnnotations((compile in Compile).value),
-    sjsxWriteFile <<= (sjsxFile, (compile in Compile), streams, sjsxLoader, sjsxSnippets, sjsxDeps, sjsxPreamble) map writeAnnotations,
+    sjsxWriteFile <<= (sjsxFile, (compile in Compile), streams, sjsxLoader, sjsxSnippets, sjsxDeps, sjsxPreamble, sjsxDebug) map writeAnnotations,
     libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjsx" % Version.sjsxVersion,
     (fastOptJS in Compile) <<= (fastOptJS in Compile).dependsOn(sjsxWriteFile),
     (fullOptJS in Compile) <<= (fullOptJS in Compile).dependsOn(sjsxWriteFile)

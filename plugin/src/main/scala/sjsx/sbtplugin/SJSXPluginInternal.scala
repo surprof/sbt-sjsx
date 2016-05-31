@@ -8,14 +8,14 @@ package sjsx.sbtplugin
 import sbt.Keys.TaskStreams
 import sbt._
 import sbt.inc.Analysis
-import sjsx.sbtplugin.SJSXPlugin.{SJSXDependency, SJSXSnippet, SJSXLoader}
+import sjsx.sbtplugin.SJSXPlugin.{SJSXDependency, SJSXLoader, SJSXSnippet}
 import xsbti.api.{Definition, Projection}
-import collection.mutable
 
 object SJSXPluginInternal {
 
+
   def getDefinitions(analysis: Analysis): Iterable[Definition] =
-    analysis.apis.external.values.flatMap(_.api.definitions()).toVector ++
+    analysis.apis.external.values.flatMap(_.api.definitions).toVector ++
     analysis.apis.internal.values.flatMap(_.api.definitions).toVector
 
   def discoverSJSXStatic(defs: Iterable[Definition]) : Iterable[SJSXSnippet] = defs.collect {
@@ -62,10 +62,12 @@ object SJSXPluginInternal {
 
 
   def writeAnnotations(file: File, analysis: Analysis, streams: TaskStreams, sjsxLoader: SJSXLoader.Value,
-                       sjsxSnippets: Seq[SJSXSnippet], sjsxDeps: Seq[SJSXDependency], sjsxAnnotsPreamble: String): Unit = {
+                       sjsxSnippets: Seq[SJSXSnippet], sjsxDeps: Seq[SJSXDependency], sjsxAnnotsPreamble: String,
+                       sjsxDebug: Boolean): Unit = {
     streams.log.info(s"Writing JS annotations to $file")
 
     val defs = getDefinitions(analysis)
+    defs.foreach(d => println(d.name()))
 
     // TODO: currently we need to replace \' quotes; find out why/where quotation of ' occurs...
     val annots = (discoverSJSXStatic(defs).toSeq++sjsxSnippets).sortBy(_.prio).
