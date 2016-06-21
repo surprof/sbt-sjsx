@@ -1,35 +1,103 @@
-//     Project: sbt-sjs-annots
+//     Project: sbt-sjsx
 //      Module:
 // Description:
 
 // Copyright (c) 2016. Distributed under the MIT License (see included LICENSE file).
 package sjsx.sbtplugin
 
+import org.scalajs.core.tools.linker.analyzer.Analysis.ClassInfo
+import org.scalajs.core.tools.linker.analyzer.Analyzer
+import org.scalajs.core.tools.linker.backend.{BasicLinkerBackend, LinkerBackend}
+import org.scalajs.core.tools.logging.NullLogger
 import sbt.Keys.TaskStreams
 import sbt._
-import sbt.inc.Analysis
-import sjsx.sbtplugin.SJSXPlugin.{SJSXSnippet, SJSXDependency, SJSXLoader}
+import sjsx.sbtplugin.SJSXPlugin.autoImport.{SJSXDependency, SJSXLoader, SJSXSnippet}
+import sjsx.sbtplugin.SJSXPlugin.{SJSXConfig, ScalaJSTools}
 import xsbti.api.{Definition, Projection}
 
+import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
+
 object SJSXPluginInternal {
+  import scala.reflect.runtime.{universe => ru}
 
 
-  def getDefinitions(analysis: Analysis): Iterable[Definition] =
-    analysis.apis.external.values.flatMap(_.api.definitions).toVector ++
-    analysis.apis.internal.values.flatMap(_.api.definitions).toVector
+  def writeAnnotations(sjsxConfig: SJSXConfig, scalaJSTools: ScalaJSTools, streams: TaskStreams): Unit = {
+    import sjsxConfig._
+    import streams.log
 
-  def discoverSJSXStatic(defs: Iterable[Definition]) : Iterable[SJSXSnippet] = defs.collect {
-      case SJSXStatic(annot) => annot
+    val classes = analyse(scalaJSTools,log)
+    val (snippets,requires) = findAnnots(classes,scalaJSTools)
+
+    val js = (snippets ++ sjsxSnippets).sortBy (_.prio).map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
+
+    sjsxLoader match {
+      case SJSXLoader.None =>
+        IO.write(sjsxFile, sjsxPreamble + js)
+      case SJSXLoader.SystemJS =>
+        val reqs = (requires ++ sjsxDeps) sortBy(_.global)
+        val reqsJS = makeRequireJS(reqs,"require")
+        val deps = reqs.map(_.id).mkString("['","','","']")
+        val script =
+          s"""$sjsxPreamble
+             |System.registerDynamic("__main",$deps,true,function(require) {
+             |$reqsJS
+             |$js
+             |});
+             |System.import("__main");
+           """.stripMargin
+        IO.write(sjsxFile,script)
     }
 
+  }
 
-  def discoverSJSXRequire(defs: Iterable[Definition]) : Set[SJSXDependency] =
-    defs.collect {
-      case SJSXRequire(dep) => dep
-    }.toSet
+  private def analyse(scalaJSTools: ScalaJSTools, log: sbt.Logger) = {
+    import scalaJSTools._
 
+    // code taken from scala-js-call-graph/sbt-scalajs-callgraph/src/main/scala/ch/epfl/sbtplugin/CallGraphPlugin.scala
+    val semantics = linker.semantics
+    val symbolRequirements = new BasicLinkerBackend(semantics,outputMode,withSourceMaps,LinkerBackend.Config())
+      .symbolRequirements
 
-  def makeRequireJS(reqs: Seq[SJSXDependency], require: String): String = {
+    val infos = Try {
+      linker.linkUnit(ir, symbolRequirements, NullLogger)
+    } match {
+      case Success(linkUnit) =>
+        linkUnit.infos.values.toSeq
+      case Failure(e) =>
+        log.warn(e.getMessage)
+        log.warn("Non linking program, falling back to all the *.sjsir files on the classpath...")
+        ir map (_.info)
+    }
+
+    Analyzer.computeReachability(semantics, symbolRequirements, infos, false).classInfos.values.filter(_.isNeededAtAll)
+  }
+
+  @inline
+  private def filterClass(cname: String): Boolean = cname.split("\\.",2).head match {
+    case "scala" | "java" | "utest" => false
+    case _ => true
+  }
+
+  private def findAnnots(classInfos: Iterable[ClassInfo], scalaJSTools: ScalaJSTools): (Seq[SJSXSnippet],Seq[SJSXDependency]) = {
+    import scalaJSTools._
+
+    val mirror = ru.runtimeMirror(classLoader)
+
+    val snippets = mutable.Buffer.empty[SJSXSnippet]
+    val deps = mutable.Buffer.empty[SJSXDependency]
+
+    // TODO: avoid filtering (scala.runtime classes and java classes cannot be found by the used class loader)
+    classInfos.view map (_.displayName) filter filterClass map classLoader.loadClass map mirror.classSymbol flatMap (_.annotations) foreach {
+      case SJSXStatic(snippet) => snippets += snippet
+      case SJSXRequire(dep) => deps += dep
+      case _ =>
+    }
+
+    (snippets,deps)
+  }
+
+  private def makeRequireJS(reqs: Seq[SJSXDependency], require: String): String = {
     case class Acc(existentPaths: Set[Seq[String]], script: String)
     @annotation.tailrec
     def createPath(prefix: Seq[String], path: Seq[String], acc: Acc): Acc =
@@ -61,51 +129,20 @@ object SJSXPluginInternal {
     }) + preamble
 
 
-  def writeAnnotations(file: File, analysis: Analysis, streams: TaskStreams, sjsxLoader: SJSXLoader.Value,
-                       sjsxSnippets: Seq[SJSXSnippet], sjsxDeps: Seq[SJSXDependency], sjsxAnnotsPreamble: String,
-                       sjsxDebug: Boolean): Unit = {
-    streams.log.info(s"Writing JS annotations to $file")
-
-    val defs = getDefinitions(analysis)
-
-    // TODO: currently we need to replace \' quotes; find out why/where quotation of ' occurs...
-    val annots = (discoverSJSXStatic(defs).toSeq++sjsxSnippets).sortBy(_.prio).
-      map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
-
-    sjsxLoader match {
-      case SJSXLoader.None =>
-        IO.write(file,sjsxAnnotsPreamble+annots)
-      case SJSXLoader.SystemJS =>
-        val reqs = (discoverSJSXRequire(defs) ++ sjsxDeps).toSeq.sortBy(_.global)
-        val reqsJS = makeRequireJS(reqs,"require")
-        val deps = reqs.map(_.id).mkString("['","','","']")
-        val script =
-          s"""$sjsxAnnotsPreamble
-             |System.registerDynamic("__main",$deps,true,function(require) {
-             |$reqsJS
-             |$annots
-             |});
-             |System.import("__main");
-           """.stripMargin
-        IO.write(file,script)
-    }
-  }
-
-
   object SJSXStatic {
     val annotated = "SJSXStatic"
-    def unapply(t: Definition) : Option[SJSXSnippet] = t.annotations().
-      find( _.base().asInstanceOf[Projection].id == annotated ).
-      map { l =>
-        val s = l.arguments.apply(0).value
-        val args = s.substring(1,s.length-1).split(",",2)
-        SJSXSnippet(args(0).toInt,extractString(args(1)))
-      }
+    def unapply(annot: reflect.runtime.universe.Annotation) : Option[SJSXSnippet] =
+      if(annot.tpe.toString=="sjsx.SJSXStatic") Some( SJSXSnippet(
+        annot.scalaArgs(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[Int],
+        annot.scalaArgs(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
+      ))
+      else None
   }
 
 
   object SJSXRequire {
     val annotated = "SJSXRequire"
+
     def unapply(t: Definition) : Option[SJSXDependency] = t.annotations().
       find( _.base().asInstanceOf[Projection].id == annotated ).
       map { l =>
@@ -117,5 +154,6 @@ object SJSXPluginInternal {
 
   @inline
   private def extractString(s: String) = s.substring(1,s.length-1)
+
 
 }

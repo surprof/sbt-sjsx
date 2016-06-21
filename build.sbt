@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.2.0",
+  version := "0.3.0-SNAPSHOT",
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
@@ -27,8 +27,10 @@ lazy val sjsx = project.
   settings(publishingSettings: _*).
   settings(
     name := "sjsx",
+    //autoScalaLibrary := false,
+    //crossPaths := false,
     libraryDependencies ++= Seq(
-      "de.surfice" %%% "smacrotools-sjs" % "0.1-SNAPSHOT"
+//      "de.surfice" %%% "smacrotools-sjs" % "0.1-SNAPSHOT"
     )
   )
 
@@ -44,6 +46,7 @@ lazy val tests = project.
 
 
 lazy val plugin = project.
+  //dependsOn(sjsx).
   settings(commonSettings: _*).
   settings(publishingSettings: _*).
   settings( 
