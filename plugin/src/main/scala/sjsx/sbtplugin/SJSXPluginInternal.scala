@@ -13,7 +13,6 @@ import sbt.Keys.TaskStreams
 import sbt._
 import sjsx.sbtplugin.SJSXPlugin.autoImport.{SJSXDependency, SJSXLoader, SJSXSnippet}
 import sjsx.sbtplugin.SJSXPlugin.{SJSXConfig, ScalaJSTools}
-import xsbti.api.{Definition, Projection}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -22,6 +21,7 @@ object SJSXPluginInternal {
   import scala.reflect.runtime.{universe => ru}
 
 
+  // TODO: more efficient way to generate sjsx file?
   def writeAnnotations(sjsxConfig: SJSXConfig, scalaJSTools: ScalaJSTools, streams: TaskStreams): Unit = {
     import sjsxConfig._
     import streams.log
@@ -87,12 +87,18 @@ object SJSXPluginInternal {
     val snippets = mutable.Buffer.empty[SJSXSnippet]
     val deps = mutable.Buffer.empty[SJSXDependency]
 
-    // TODO: avoid filtering (scala.runtime classes and java classes cannot be found by the used class loader)
-    classInfos.view map (_.displayName) filter filterClass map classLoader.loadClass map mirror.classSymbol flatMap (_.annotations) foreach {
-      case SJSXStatic(snippet) => snippets += snippet
-      case SJSXRequire(dep) => deps += dep
-      case _ =>
+    def extractAnnots(cls: Class[_]) = try {
+      mirror.classSymbol(cls).annotations foreach {
+        case SJSXStatic(snippet) => snippets += snippet
+        case SJSXRequire(dep) => deps += dep
+        case _ =>
+      }
+    } catch {
+      case _:Throwable =>
     }
+
+    // TODO: avoid filtering (scala.runtime classes and java classes cannot be found by the used class loader)
+    classInfos.view map (_.displayName) filter filterClass map classLoader.loadClass foreach extractAnnots
 
     (snippets,deps)
   }
@@ -142,18 +148,14 @@ object SJSXPluginInternal {
 
   object SJSXRequire {
     val annotated = "SJSXRequire"
+    def unapply(annot: reflect.runtime.universe.Annotation) : Option[SJSXDependency] =
+      if(annot.tpe.toString=="sjsx.SJSXRequire") Some( SJSXDependency(
+        annot.scalaArgs(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String],
+        annot.scalaArgs(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
+      ))
+      else None
 
-    def unapply(t: Definition) : Option[SJSXDependency] = t.annotations().
-      find( _.base().asInstanceOf[Projection].id == annotated ).
-      map { l =>
-        val s = l.arguments.apply(0).value
-        val args = s.substring(1,s.length-1).split(",",2)
-        SJSXDependency(extractString(args(1)),extractString(args(0)))
-      }
   }
-
-  @inline
-  private def extractString(s: String) = s.substring(1,s.length-1)
 
 
 }

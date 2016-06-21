@@ -12,7 +12,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.impl.DependencyBuilders
 import sbt.Keys._
 import sbt._
-import sbt.classpath.{ClasspathUtilities, SelfFirstLoader}
+import sbt.classpath.ClasspathUtilities
 
 object SJSXPlugin extends sbt.AutoPlugin {
   import SJSXPluginInternal._
@@ -47,8 +47,8 @@ object SJSXPlugin extends sbt.AutoPlugin {
     case class SJSXDependency(global: String, id: String)
   }
 
-  import autoImport._
   import ScalaJSPlugin.AutoImport._
+  import autoImport._
   import org.scalajs.sbtplugin.ScalaJSPluginInternal.scalaJSLinker
 
   lazy val sjsxConfig = taskKey[SJSXConfig]("assembled SJSX configuration")
@@ -79,7 +79,6 @@ object SJSXPlugin extends sbt.AutoPlugin {
         ScalaJSTools(ir.data,linker,om,withSourceMaps,ClasspathUtilities.makeLoader(fullClasspath.map(_.data),instance))),
 
     sjsxWriteFile <<= (sjsxConfig,scalaJSTools,streams) map writeAnnotations,
-//    libraryDependencies += "de.surfice" %%% "sjsx" % Version.sjsxVersion, //DepBuilder. toScalaJSGroupID("de.surfice") % "sjsx" % Version.sjsxVersion,
     libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjsx" % Version.sjsxVersion,
     (fastOptJS in Compile) <<= (fastOptJS in Compile).dependsOn(sjsxWriteFile),
     (fullOptJS in Compile) <<= (fullOptJS in Compile).dependsOn(sjsxWriteFile)
