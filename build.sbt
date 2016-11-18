@@ -54,7 +54,7 @@ lazy val plugin = project.
     description := "sbt plugin for generating of JS annotation files from annotations defined on Scala classes",
     sbtPlugin := true,
     scalaVersion := "2.10.6",
-    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.9"),
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.13"),
     sourceGenerators in Compile += Def.task {
       val file = (sourceManaged in Compile).value / "Version.scala"
       IO.write(file,

@@ -39,12 +39,13 @@ object SJSXPlugin extends sbt.AutoPlugin {
 
     object SJSXLoader extends Enumeration {
       val None = Value
-      val SystemJS = Value
+//      val SystemJS = Value
+      val CommonJS = Value
     }
 
     case class SJSXSnippet(prio: Int, arg: String)
 
-    case class SJSXDependency(global: String, id: String)
+    case class SJSXDependency(id: String, global: String)
   }
 
   import ScalaJSPlugin.AutoImport._

@@ -34,17 +34,27 @@ object SJSXPluginInternal {
     sjsxLoader match {
       case SJSXLoader.None =>
         IO.write(sjsxFile, sjsxPreamble + js)
-      case SJSXLoader.SystemJS =>
+//      case SJSXLoader.SystemJS | SJSXLoader.CommonJS =>
+//        val reqs = (requires ++ sjsxDeps) sortBy(_.global)
+//        val reqsJS = makeRequireJS(reqs,"require")
+//        val deps = reqs.map(_.id).mkString("['","','","']")
+//        val script =
+//          s"""$sjsxPreamble
+//             |System.registerDynamic("__main",$deps,true,function(require) {
+//             |$reqsJS
+//             |$js
+//             |});
+//             |System.import("__main");
+//           """.stripMargin
+//        IO.write(sjsxFile,script)
+      case SJSXLoader.CommonJS =>
         val reqs = (requires ++ sjsxDeps) sortBy(_.global)
-        val reqsJS = makeRequireJS(reqs,"require")
+        val reqsJS = makeRequireJS(reqs,"require",sjsxLoader)
         val deps = reqs.map(_.id).mkString("['","','","']")
         val script =
           s"""$sjsxPreamble
-             |System.registerDynamic("__main",$deps,true,function(require) {
              |$reqsJS
              |$js
-             |});
-             |System.import("__main");
            """.stripMargin
         IO.write(sjsxFile,script)
     }
@@ -103,7 +113,7 @@ object SJSXPluginInternal {
     (snippets,deps)
   }
 
-  private def makeRequireJS(reqs: Seq[SJSXDependency], require: String): String = {
+  private def makeRequireJS(reqs: Seq[SJSXDependency], require: String, loader: SJSXLoader.Value): String = {
     case class Acc(existentPaths: Set[Seq[String]], script: String)
     @annotation.tailrec
     def createPath(prefix: Seq[String], path: Seq[String], acc: Acc): Acc =
@@ -120,10 +130,13 @@ object SJSXPluginInternal {
         else
           createPath(newPrefix,path.tail,acc)
       }
-    val prefix = "window"
+    val prefix = loader match {
+      case SJSXLoader.None => Seq("window")
+      case SJSXLoader.CommonJS => Nil
+    }
     reqs.foldLeft(Acc(Set.empty[Seq[String]],"")){ (acc,d) =>
-      val a = createPath(Seq(prefix),d.global.split("\\.").init,acc)
-      val req = s"$prefix.${d.global} = $require('${d.id}');\n"
+      val a = createPath(prefix,d.global.split("\\.").init,acc)
+      val req = s"${prefix.headOption.map( _ + ".").getOrElse("")}${d.global} = $require('${d.id}');\n"
       a.copy(script = a.script+req)
     }.script
   }
@@ -131,7 +144,8 @@ object SJSXPluginInternal {
   private def preamble(loader: SJSXLoader.Value, preamble: String) =
     (loader match {
       case SJSXLoader.None => ""
-      case SJSXLoader.SystemJS => "window.require = function(id){System.amdRequire(document.baseURI+'/'+id)};\n"
+//      case SJSXLoader.SystemJS => "window.require = function(id){System.amdRequire(document.baseURI+'/'+id)};\n"
+      case SJSXLoader.CommonJS => ""
     }) + preamble
 
 
