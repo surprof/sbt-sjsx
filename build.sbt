@@ -34,16 +34,16 @@ lazy val sjsx = project.
     )
   )
 
-lazy val tests = project.
-  enablePlugins(ScalaJSPlugin).
-  dependsOn(sjsx).
-  settings(commonSettings:_*).
-  settings(
-    name := "tests",
-    publish := {},
-    publishLocal := {}
-  )
-
+//lazy val tests = project.
+//  enablePlugins(ScalaJSPlugin).
+//  dependsOn(sjsx).
+//  settings(commonSettings:_*).
+//  settings(
+//    name := "tests",
+//    publish := {},
+//    publishLocal := {}
+//  )
+//
 
 lazy val plugin = project.
   //dependsOn(sjsx).
@@ -63,8 +63,7 @@ lazy val plugin = project.
         """.stripMargin)
       Seq(file)
     }.taskValue,
-    libraryDependencies ++= Seq(
-    )
+    libraryDependencies ++= Seq()
   )
 
 
