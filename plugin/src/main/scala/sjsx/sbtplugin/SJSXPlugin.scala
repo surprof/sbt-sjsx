@@ -70,9 +70,10 @@ object SJSXPlugin extends sbt.AutoPlugin {
     sjsxDebug := true,
     sjsxSnippets := Seq(),
     sjsxDeps := Seq(),
-    sjsxLoader := SJSXLoader.None,
+    sjsxLoader := SJSXLoader.CommonJS,
     sjsxPreamble := "",
     sjsxFile := (crossTarget in compile).value / s"${(moduleName in compile).value}-sjsx.js",
+    scalaJSModuleKind := ModuleKind.CommonJSModule,
 
     sjsxConfig <<= (sjsxPreamble,sjsxFile,sjsxLoader,sjsxSnippets,sjsxDeps,sjsxDebug) map SJSXConfig.apply,
     scalaJSTools <<= ((scalaJSIR in Compile),(scalaJSLinker in Compile),scalaJSOutputMode,emitSourceMaps,(fullClasspath in Compile),scalaInstance) map (

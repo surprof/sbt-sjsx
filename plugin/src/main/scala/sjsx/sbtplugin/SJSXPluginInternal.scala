@@ -141,12 +141,12 @@ object SJSXPluginInternal {
     }.script
   }
 
-  private def preamble(loader: SJSXLoader.Value, preamble: String) =
-    (loader match {
-      case SJSXLoader.None => ""
+//  private def preamble(loader: SJSXLoader.Value, preamble: String) =
+//    (loader match {
+//      case SJSXLoader.None => ""
 //      case SJSXLoader.SystemJS => "window.require = function(id){System.amdRequire(document.baseURI+'/'+id)};\n"
-      case SJSXLoader.CommonJS => ""
-    }) + preamble
+//      case SJSXLoader.CommonJS => ""
+//    }) + preamble
 
 
   object SJSXStatic {
