@@ -1,11 +1,11 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.3.0-SNAPSHOT",
+  version := "0.3.0",
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "utest" % "0.4.3" % "test"
+    "com.lihaoyi" %% "utest" % "0.4.4" % "test"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework"),
   resolvers += Resolver.sonatypeRepo("snapshots")
@@ -30,8 +30,8 @@ lazy val sjsx = project.
     //autoScalaLibrary := false,
     //crossPaths := false,
     libraryDependencies ++= Seq(
-//      "de.surfice" %%% "smacrotools-sjs" % "0.1-SNAPSHOT"
-    )
+    ),
+    crossScalaVersions := Seq("2.11.8","2.12.0")
   )
 
 //lazy val tests = project.
@@ -51,7 +51,7 @@ lazy val plugin = project.
   settings(publishingSettings: _*).
   settings( 
     name := "sbt-sjsx",
-    description := "sbt plugin for generating of JS annotation files from annotations defined on Scala classes",
+    description := "sbt plugin for generating JS annotation files from annotations defined on Scala classes",
     sbtPlugin := true,
     scalaVersion := "2.10.6",
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.13"),
