@@ -66,14 +66,15 @@ object SJSXPluginInternal {
 
     // code taken from scala-js-call-graph/sbt-scalajs-callgraph/src/main/scala/ch/epfl/sbtplugin/CallGraphPlugin.scala
     val semantics = linker.semantics
-    val symbolRequirements = new BasicLinkerBackend(semantics,outputMode,withSourceMaps,LinkerBackend.Config())
+    val symbolRequirements = new BasicLinkerBackend(semantics,outputMode,moduleKind,withSourceMaps,LinkerBackend.Config())
       .symbolRequirements
 
     val infos = Try {
-      linker.linkUnit(ir, symbolRequirements, NullLogger)
+      linker.linkUnit(ir, moduleInitializers, symbolRequirements, NullLogger)
     } match {
       case Success(linkUnit) =>
-        linkUnit.infos.values.toSeq
+        linkUnit.classDefs.map(_.toInfo)
+//        linkUnit.infos.values.toSeq
       case Failure(e) =>
         log.warn(e.getMessage)
         log.warn("Non linking program, falling back to all the *.sjsir files on the classpath...")

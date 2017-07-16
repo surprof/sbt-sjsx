@@ -1,8 +1,8 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.3.0",
-  scalaVersion := "2.11.8",
+  version := "0.3.1",
+  scalaVersion := "2.11.11",
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "utest" % "0.4.4" % "test"
@@ -31,7 +31,7 @@ lazy val sjsx = project.
     //crossPaths := false,
     libraryDependencies ++= Seq(
     ),
-    crossScalaVersions := Seq("2.11.8","2.12.0")
+    crossScalaVersions := Seq("2.11.11","2.12.2")
   )
 
 //lazy val tests = project.
@@ -54,7 +54,7 @@ lazy val plugin = project.
     description := "sbt plugin for generating JS annotation files from annotations defined on Scala classes",
     sbtPlugin := true,
     scalaVersion := "2.10.6",
-    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.13"),
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
     sourceGenerators in Compile += Def.task {
       val file = (sourceManaged in Compile).value / "Version.scala"
       IO.write(file,

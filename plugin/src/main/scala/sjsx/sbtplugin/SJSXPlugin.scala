@@ -6,7 +6,7 @@
 package sjsx.sbtplugin
 
 import org.scalajs.core.tools.io.{RelativeVirtualFile, VirtualScalaJSIRFile}
-import org.scalajs.core.tools.linker.ClearableLinker
+import org.scalajs.core.tools.linker.{ClearableLinker, ModuleInitializer}
 import org.scalajs.core.tools.linker.backend.OutputMode
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.impl.DependencyBuilders
@@ -63,7 +63,9 @@ object SJSXPlugin extends sbt.AutoPlugin {
                           linker: ClearableLinker,
                           outputMode: OutputMode,
                           withSourceMaps: Boolean,
-                          classLoader: ClassLoader)
+                          classLoader: ClassLoader,
+                          moduleKind:  org.scalajs.core.tools.linker.ModuleKind,
+                          moduleInitializers: Seq[ModuleInitializer])
 
   override def projectSettings = Seq(
     // default config
@@ -76,9 +78,18 @@ object SJSXPlugin extends sbt.AutoPlugin {
     scalaJSModuleKind := ModuleKind.CommonJSModule,
 
     sjsxConfig <<= (sjsxPreamble,sjsxFile,sjsxLoader,sjsxSnippets,sjsxDeps,sjsxDebug) map SJSXConfig.apply,
-    scalaJSTools <<= ((scalaJSIR in Compile),(scalaJSLinker in Compile),scalaJSOutputMode,emitSourceMaps,(fullClasspath in Compile),scalaInstance) map (
-      (ir,linker,om,withSourceMaps,fullClasspath,instance) =>
-        ScalaJSTools(ir.data,linker,om,withSourceMaps,ClasspathUtilities.makeLoader(fullClasspath.map(_.data),instance))),
+    scalaJSTools <<= (
+      (scalaJSIR in Compile),
+      (scalaJSLinker in Compile),
+      scalaJSOutputMode,
+      emitSourceMaps,
+      (fullClasspath in Compile),
+      scalaInstance,
+      scalaJSModuleKind,
+      scalaJSModuleInitializers) map (
+      (ir,linker,om,withSourceMaps,fullClasspath,instance,moduleKind,moduleInitializers) =>
+        ScalaJSTools(ir.data,linker,om,withSourceMaps,
+          ClasspathUtilities.makeLoader(fullClasspath.map(_.data),instance),moduleKind,moduleInitializers)),
 
     sjsxWriteFile <<= (sjsxConfig,scalaJSTools,streams) map writeAnnotations,
     libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjsx" % Version.sjsxVersion,
