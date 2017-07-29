@@ -29,11 +29,11 @@ object SJSXPluginInternal {
     val classes = analyse(scalaJSTools,log)
     val (snippets,requires) = findAnnots(classes,scalaJSTools)
 
-    val js = (snippets ++ sjsxSnippets).sortBy (_.prio).map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
+    val js = (snippets ++ snippets).sortBy (_.prio).map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
 
-    sjsxLoader match {
+    loader match {
       case SJSXLoader.None =>
-        IO.write(sjsxFile, sjsxPreamble + js)
+        IO.write(file, preamble + js)
 //      case SJSXLoader.SystemJS | SJSXLoader.CommonJS =>
 //        val reqs = (requires ++ sjsxDeps) sortBy(_.global)
 //        val reqsJS = makeRequireJS(reqs,"require")
@@ -48,15 +48,15 @@ object SJSXPluginInternal {
 //           """.stripMargin
 //        IO.write(sjsxFile,script)
       case SJSXLoader.CommonJS =>
-        val reqs = (requires ++ sjsxDeps) sortBy(_.global)
-        val reqsJS = makeRequireJS(reqs,"require",sjsxLoader)
+        val reqs = (requires ++ dependencies) sortBy(_.global)
+        val reqsJS = makeRequireJS(reqs,"require",loader)
         val deps = reqs.map(_.id).mkString("['","','","']")
         val script =
-          s"""$sjsxPreamble
+          s"""$preamble
              |$reqsJS
              |$js
            """.stripMargin
-        IO.write(sjsxFile,script)
+        IO.write(file,script)
     }
 
   }
