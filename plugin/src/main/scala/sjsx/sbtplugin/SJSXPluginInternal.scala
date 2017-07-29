@@ -27,9 +27,9 @@ object SJSXPluginInternal {
     import streams.log
 
     val classes = analyse(scalaJSTools,log)
-    val (snippets,requires) = findAnnots(classes,scalaJSTools)
+    val (annotationSnippets,requires) = findAnnots(classes,scalaJSTools)
 
-    val js = (snippets ++ snippets).sortBy (_.prio).map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
+    val js = (snippets ++ annotationSnippets).sortBy (_.prio).map( _.arg.replaceAll("\\\\'","'")).mkString("\n")
 
     loader match {
       case SJSXLoader.None =>
