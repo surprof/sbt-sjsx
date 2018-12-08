@@ -5,11 +5,11 @@
 // Copyright (c) 2016. Distributed under the MIT License (see included LICENSE file).
 package sjsx.sbtplugin
 
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import org.scalajs.core.tools.io.{RelativeVirtualFile, VirtualScalaJSIRFile}
 import org.scalajs.core.tools.linker.{ClearableLinker, ModuleInitializer}
 import org.scalajs.core.tools.linker.backend.OutputMode
 import org.scalajs.sbtplugin.{ScalaJSPlugin, ScalaJSPluginInternal, Stage}
-import org.scalajs.sbtplugin.impl.DependencyBuilders
 import sbt.Keys._
 import sbt._
 import sbt.internal.inc.classpath.ClasspathUtilities
@@ -105,7 +105,7 @@ object SJSXPlugin extends sbt.AutoPlugin {
       scalaJSModuleInitializers.value)
     }.value,
 
-    libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjsx" % Version.sjsxVersion,
+    libraryDependencies += "de.surfice" %%% "sjsx" % Version.sjsxVersion,
 
     sjsxConfig in fastOptJS := SJSXConfig(
       preamble = "",
@@ -151,7 +151,5 @@ object SJSXPlugin extends sbt.AutoPlugin {
       }
     )
   }
-
-  private object DepBuilder extends DependencyBuilders
 
 }

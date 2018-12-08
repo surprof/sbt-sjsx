@@ -50,7 +50,7 @@ object SJSXPluginInternal {
       case SJSXLoader.CommonJS =>
         val reqs = (requires ++ dependencies) sortBy(_.global)
         val reqsJS = makeRequireJS(reqs,"require",loader)
-        val deps = reqs.map(_.id).mkString("['","','","']")
+//        val deps = reqs.map(_.id).mkString("['","','","']")
         val script =
           s"""$preamble
              |$reqsJS
@@ -153,9 +153,9 @@ object SJSXPluginInternal {
   object SJSXStatic {
     val annotated = "SJSXStatic"
     def unapply(annot: reflect.runtime.universe.Annotation) : Option[SJSXSnippet] =
-      if(annot.tpe.toString=="sjsx.SJSXStatic") Some( SJSXSnippet(
-        annot.scalaArgs(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[Int],
-        annot.scalaArgs(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
+      if(annot.tree.tpe.toString=="sjsx.SJSXStatic") Some( SJSXSnippet(
+        annot.tree.children.tail(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[Int],
+        annot.tree.children.tail(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
       ))
       else None
   }
@@ -164,9 +164,9 @@ object SJSXPluginInternal {
   object SJSXRequire {
     val annotated = "SJSXRequire"
     def unapply(annot: reflect.runtime.universe.Annotation) : Option[SJSXDependency] =
-      if(annot.tpe.toString=="sjsx.SJSXRequire") Some( SJSXDependency(
-        annot.scalaArgs(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String],
-        annot.scalaArgs(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
+      if(annot.tree.tpe.toString=="sjsx.SJSXRequire") Some( SJSXDependency(
+        annot.tree.children.tail(0).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String],
+        annot.tree.children.tail(1).productElement(0).asInstanceOf[ru.Constant].value.asInstanceOf[String]
       ))
       else None
 
