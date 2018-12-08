@@ -12,7 +12,7 @@ import org.scalajs.sbtplugin.{ScalaJSPlugin, ScalaJSPluginInternal, Stage}
 import org.scalajs.sbtplugin.impl.DependencyBuilders
 import sbt.Keys._
 import sbt._
-import sbt.classpath.ClasspathUtilities
+import sbt.internal.inc.classpath.ClasspathUtilities
 
 object SJSXPlugin extends sbt.AutoPlugin {
   import SJSXPluginInternal._
@@ -95,18 +95,15 @@ object SJSXPlugin extends sbt.AutoPlugin {
 
     scalaJSModuleKind := ModuleKind.CommonJSModule,
 
-    scalaJSTools <<= (
-      (scalaJSIR in Compile),
-      (scalaJSLinker in Compile),
-      scalaJSOutputMode,
-      emitSourceMaps,
-      (fullClasspath in Compile),
-      scalaInstance,
-      scalaJSModuleKind,
-      scalaJSModuleInitializers) map (
-      (ir,linker,om,withSourceMaps,fullClasspath,instance,moduleKind,moduleInitializers) =>
-        ScalaJSTools(ir.data,linker,om,withSourceMaps,
-          ClasspathUtilities.makeLoader(fullClasspath.map(_.data),instance),moduleKind,moduleInitializers)),
+    scalaJSTools := Def.task {
+      ScalaJSTools((scalaJSIR in Compile).value.data,
+      (scalaJSLinker in Compile).value,
+      scalaJSOutputMode.value,
+      emitSourceMaps.value,
+      ClasspathUtilities.makeLoader((fullClasspath in Compile).value.map(_.data), scalaInstance.value),
+      scalaJSModuleKind.value,
+      scalaJSModuleInitializers.value)
+    }.value,
 
     libraryDependencies += DepBuilder.toScalaJSGroupID("de.surfice") %%% "sjsx" % Version.sjsxVersion,
 

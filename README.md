@@ -1,2 +1,2 @@
-sjs-annots
+sbt-sjsx
 ==========
